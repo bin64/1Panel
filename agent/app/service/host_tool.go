@@ -613,8 +613,7 @@ func getProcessStatus(config *response.SupervisorProcessConfig, containerName st
 				Status: fields[1],
 			}
 			if fields[1] == "RUNNING" {
-				status.PID = strings.TrimSuffix(fields[3], ",")
-				status.Uptime = fields[5]
+				status.PID, status.Uptime = parseSupervisorRunningDetails(fields)
 			} else {
 				status.Msg = strings.Join(fields[2:], " ")
 			}
@@ -622,4 +621,23 @@ func getProcessStatus(config *response.SupervisorProcessConfig, containerName st
 		}
 	}
 	return nil
+}
+
+func parseSupervisorRunningDetails(fields []string) (string, string) {
+	var pid, uptime string
+	for i, field := range fields {
+		field = strings.TrimSuffix(field, ",")
+		switch field {
+		case "pid":
+			if i+1 < len(fields) {
+				pid = strings.TrimSuffix(fields[i+1], ",")
+			}
+		case "uptime":
+			if i+1 < len(fields) {
+				uptime = strings.Join(fields[i+1:], " ")
+			}
+			return pid, uptime
+		}
+	}
+	return pid, uptime
 }
